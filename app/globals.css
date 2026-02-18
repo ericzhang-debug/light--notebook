@@ -3,6 +3,16 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* MacOS-inspired colors */
+  --macos-sidebar-bg: #f5f5f7;
+  --macos-sidebar-hover: #e5e5e7;
+  --macos-sidebar-selected: #007aff;
+  --macos-bg: #ffffff;
+  --macos-text-primary: #1d1d1f;
+  --macos-text-secondary: #86868b;
+  --macos-border: #d2d2d7;
+  --macos-divider: #e5e5e7;
 }
 
 @theme inline {
@@ -16,6 +26,16 @@
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+
+    /* MacOS dark mode colors */
+    --macos-sidebar-bg: #1c1c1e;
+    --macos-sidebar-hover: #2c2c2e;
+    --macos-sidebar-selected: #0a84ff;
+    --macos-bg: #000000;
+    --macos-text-primary: #f5f5f7;
+    --macos-text-secondary: #86868b;
+    --macos-border: #38383a;
+    --macos-divider: #2c2c2e;
   }
 }
 
