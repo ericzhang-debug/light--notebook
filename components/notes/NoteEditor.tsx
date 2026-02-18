@@ -14,7 +14,7 @@ interface NoteEditorProps {
 export function NoteEditor({ note, onUpdate, onDelete, onBack }: NoteEditorProps) {
   const [title, setTitle] = useState(note.title);
   const [content, setContent] = useState(note.content);
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const contentRef = useRef<HTMLTextAreaElement>(null);
 
   // Auto-resize textarea
