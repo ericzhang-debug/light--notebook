@@ -3,7 +3,7 @@ import { createClient } from '@libsql/client';
 import * as schema from './schema';
 import { config } from 'dotenv';
 
-config({ path: '.env.local' });
+// config({ path: '.env.local' });
 const client = createClient({
   url: process.env.TURSO_CONNECTION_URL!,
   authToken: process.env.TURSO_AUTH_TOKEN!,
