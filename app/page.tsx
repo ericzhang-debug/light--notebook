@@ -53,13 +53,15 @@ export default function Home() {
           </SignedOut>
 
           <SignedIn>
-            <Link
-              href="/dashboard"
-              className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-semibold hover:from-green-600 hover:to-emerald-700 transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5 justify-center"
-            >
-              <Zap className="w-5 h-5" />
-              进入备忘录
-            </Link>
+            <div className="flex justify-center mb-16">
+              <Link
+                href="/dashboard"
+                className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-semibold hover:from-green-600 hover:to-emerald-700 transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+              >
+                <Zap className="w-5 h-5" />
+                进入备忘录
+              </Link>
+            </div>
           </SignedIn>
           </div>
       </main>
