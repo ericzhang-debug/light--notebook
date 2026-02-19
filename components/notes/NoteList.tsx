@@ -13,7 +13,7 @@ interface NoteListProps {
 
 export function NoteList({ notes, selectedNoteId, onSelectNote, onNewNote }: NoteListProps) {
   return (
-    <div className="w-full md:w-80 bg-[var(--macos-sidebar-bg)] border-r border-[var(--macos-border)] flex flex-col h-full">
+    <div className="w-full bg-[var(--macos-sidebar-bg)] border-r border-[var(--macos-border)] flex flex-col h-full">
       {/* Header with New Note button */}
       <div className="p-4 border-b border-[var(--macos-divider)]">
         <button

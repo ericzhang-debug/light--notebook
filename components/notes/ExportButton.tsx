@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { Download, ChevronDown } from 'lucide-react';
 import { Note } from '@/lib/db/schema';
-import jsPDF from 'jspdf';
+import html2pdf from 'html2pdf.js';
 
 interface ExportButtonProps {
   note: Note | null;
@@ -33,7 +33,8 @@ export function ExportButton({ note }: ExportButtonProps) {
   const exportAsTxt = useCallback(() => {
     if (!note) return;
 
-    const content = `${note.title}\n\n${note.content}`;
+    // Add BOM for proper UTF-8 encoding
+    const content = '\uFEFF' + `${note.title}\n\n${note.content}`;
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -49,7 +50,8 @@ export function ExportButton({ note }: ExportButtonProps) {
   const exportAsDoc = useCallback(() => {
     if (!note) return;
 
-    const content = `${note.title}\n\n${note.content}`;
+    // Add BOM for proper UTF-8 encoding in Word
+    const content = '\uFEFF' + `<html><meta charset="utf-8"><body>${note.title}<br/><br/>${note.content.replace(/\n/g, '<br/>')}</body></html>`;
     const blob = new Blob([content], { type: 'application/msword' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -67,19 +69,31 @@ export function ExportButton({ note }: ExportButtonProps) {
 
     setIsExporting(true);
     try {
-      const pdf = new jsPDF();
+      // Create HTML content for PDF
+      const element = document.createElement('div');
+      element.style.padding = '40px';
+      element.style.fontFamily = 'Arial, sans-serif';
+      element.innerHTML = `
+        <h1 style="font-size: 24px; font-weight: bold; margin-bottom: 20px; color: #333;">
+          ${note.title || '无标题'}
+        </h1>
+        <div style="font-size: 14px; line-height: 1.8; color: #666; white-space: pre-wrap;">${note.content}</div>
+      `;
 
-      // Add title
-      pdf.setFontSize(18);
-      pdf.text(note.title || '无标题', 20, 20);
+      document.body.appendChild(element);
 
-      // Add content (with word wrap)
-      pdf.setFontSize(12);
-      const maxWidth = pdf.internal.pageSize.getWidth() - 40;
-      const lines = pdf.splitTextToSize(note.content, maxWidth);
-      pdf.text(lines, 20, 35);
+      // Generate PDF
+      const opt = {
+        margin: 10,
+        filename: `${note.title || 'note'}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } as const,
+      };
 
-      pdf.save(`${note.title || 'note'}.pdf`);
+      await html2pdf().set(opt).from(element).save();
+
+      document.body.removeChild(element);
     } catch (error) {
       console.error('PDF export failed:', error);
     } finally {
