@@ -8,9 +8,21 @@ import {
   SignUpButton,
 } from '@clerk/nextjs'
 import { Metadata } from 'next'
+import { PWAInstallPrompt } from '@/components/pwa-install-prompt'
 
 export const metadata: Metadata = {
   title: '老张的备忘录',
+  manifest: '/manifest.json',
+  themeColor: '#ffffff',
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
+  },
+  other: {
+    'mobile-web-app-capable': 'yes',
+    'apple-mobile-web-app-capable': 'yes',
+    'apple-mobile-web-app-status-bar-style': 'default',
+  },
 }
 
 export default function RootLayout({
@@ -22,6 +34,7 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="zh-CN">
         <body className="antialiased">
+          <PWAInstallPrompt />
           <SignedOut>
             <header className="flex justify-end items-center p-4 gap-4 h-16">
               <SignInButton>
