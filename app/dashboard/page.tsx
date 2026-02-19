@@ -63,20 +63,16 @@ export default function DashboardPage() {
     }
   };
 
-  // Update note
+  // Update note - silent save, doesn't update UI state
   const handleUpdateNote = async (id: number, data: { title?: string; content?: string }) => {
     try {
-      const response = await fetch(`/api/notes/${id}`, {
+      await fetch(`/api/notes/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
-      if (response.ok) {
-        const updatedNote = await response.json();
-        setNotes((prev) =>
-          prev.map((note) => (note.id === id ? updatedNote : note))
-        );
-      }
+      // Silent save - don't update notes state to avoid re-render issues
+      // Only update when switching notes or creating new notes
     } catch (error) {
       console.error('Failed to update note:', error);
     }
@@ -100,10 +96,21 @@ export default function DashboardPage() {
     }
   };
 
-  // Select note
-  const handleSelectNote = useCallback((id: number) => {
+  // Select note - refresh notes list when switching to get latest data
+  const handleSelectNote = useCallback(async (id: number) => {
     setSelectedNoteId(id);
     setMobileView('editor');
+
+    // Refresh notes list to get latest data when switching
+    try {
+      const response = await fetch('/api/notes');
+      if (response.ok) {
+        const data = await response.json();
+        setNotes(data);
+      }
+    } catch (error) {
+      console.error('Failed to refresh notes:', error);
+    }
   }, []);
 
   // Back to list (mobile)
