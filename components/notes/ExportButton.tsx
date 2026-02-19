@@ -3,7 +3,20 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { Download, ChevronDown } from 'lucide-react';
 import { Note } from '@/lib/db/schema';
-import { Document, Page, Text, View } from '@react-pdf/renderer';
+import { Document, Page, Text, View, Font } from '@react-pdf/renderer';
+
+Font.register({
+  family: 'NotoSansSC',
+  fonts: [
+    {
+      src: '/fonts/NotoSansSC-Regular.ttf',
+    },
+    {
+      src: '/fonts/NotoSansSC-Bold.ttf',
+      fontWeight: 'bold',
+    }
+  ]
+});
 
 interface ExportButtonProps {
   note: Note | null;
@@ -16,10 +29,10 @@ function PdfDocument({ note }: { note: Note }) {
   return (
     <Document>
       <Page size="A4" style={{ padding: 40 }}>
-        <Text style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 20, color: '#333' }}>
+        <Text style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 20, color: '#333',fontFamily: 'NotoSansSC' }}>
           {note.title || '无标题'}
         </Text>
-        <Text style={{ fontSize: 14, lineHeight: 1.8, color: '#666' }}>
+        <Text style={{ fontSize: 14, lineHeight: 1.8, color: '#666', fontFamily: 'NotoSansSC' }}>
           {note.content}
         </Text>
       </Page>

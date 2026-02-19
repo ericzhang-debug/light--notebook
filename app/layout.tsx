@@ -7,6 +7,11 @@ import {
   SignInButton,
   SignUpButton,
 } from '@clerk/nextjs'
+import { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: '老张的备忘录',
+}
 
 export default function RootLayout({
   children,
