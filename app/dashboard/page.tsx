@@ -49,6 +49,19 @@ export default function DashboardPage() {
     }
   };
 
+  // Refresh notes (for pull-to-refresh)
+  const handleRefresh = async () => {
+    try {
+      const response = await fetch('/api/notes');
+      if (response.ok) {
+        const data = await response.json();
+        setNotes(data);
+      }
+    } catch (error) {
+      console.error('Failed to refresh notes:', error);
+    }
+  };
+
   // Create new note
   const handleNewNote = async () => {
     try {
@@ -159,6 +172,7 @@ export default function DashboardPage() {
               selectedNoteId={selectedNoteId}
               onSelectNote={handleSelectNote}
               onNewNote={handleNewNote}
+              onRefresh={handleRefresh}
             />
             {selectedNote ? (
               <NoteEditor
