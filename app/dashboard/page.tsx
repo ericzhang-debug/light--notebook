@@ -8,6 +8,8 @@ import { Note } from '@/lib/db/schema';
 import { NoteList } from '@/components/notes/NoteList';
 import { NoteEditor } from '@/components/notes/NoteEditor';
 import { EmptyState } from '@/components/notes/EmptyState';
+import { ResizablePanels } from '@/components/notes/ResizablePanels';
+import { ExportButton } from '@/components/notes/ExportButton';
 
 export default function DashboardPage() {
   const { isLoaded, userId } = useAuth();
@@ -73,8 +75,7 @@ export default function DashboardPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
-      // Silent save - don't update notes state
-      // Only update the specific note in list for display purposes
+      // Silent save - update the specific note in list for display
       setNotes((prev) =>
         prev.map((note) =>
           note.id === id
@@ -139,37 +140,64 @@ export default function DashboardPage() {
 
   return (
     <div className="h-screen flex flex-col">
-      {/* Top header bar with user button */}
+      {/* Top header bar with user button and export */}
       <header className="flex justify-between items-center px-4 py-3 border-b border-[var(--macos-divider)] bg-[var(--macos-bg)]">
-        <h1 className="text-lg font-semibold text-[var(--macos-text-primary)]"></h1>
-        <UserButton />
+        <h1 className="text-lg font-semibold text-[var(--macos-text-primary)]">备忘录</h1>
+        <div className="flex items-center gap-3">
+          <ExportButton note={selectedNote} />
+          <UserButton />
+        </div>
       </header>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col md:flex-row">
-        {/* Sidebar - always visible on desktop, conditionally on mobile */}
-        <div className={`${mobileView === 'editor' ? 'hidden md:flex' : 'flex'} md:flex w-full md:w-80`}>
-          <NoteList
-            notes={notes}
-            selectedNoteId={selectedNoteId}
-            onSelectNote={handleSelectNote}
-            onNewNote={handleNewNote}
-          />
+      <div className="flex-1">
+        {/* Desktop: Resizable panels */}
+        <div className="hidden md:block h-full">
+          <ResizablePanels defaultLeftWidth={320} minWidth={200} maxWidth={600}>
+            <NoteList
+              notes={notes}
+              selectedNoteId={selectedNoteId}
+              onSelectNote={handleSelectNote}
+              onNewNote={handleNewNote}
+            />
+            {selectedNote ? (
+              <NoteEditor
+                key={editorKey}
+                note={selectedNote}
+                onUpdate={handleUpdateNote}
+                onDelete={handleDeleteNote}
+              />
+            ) : (
+              <EmptyState />
+            )}
+          </ResizablePanels>
         </div>
 
-        {/* Editor - always visible on desktop, conditionally on mobile */}
-        <div className={`${mobileView === 'list' ? 'hidden md:flex' : 'flex'} flex-1`}>
-          {selectedNote ? (
-            // Use key to force remount when switching notes
-            <NoteEditor
-              key={editorKey}
-              note={selectedNote}
-              onUpdate={handleUpdateNote}
-              onDelete={handleDeleteNote}
-              onBack={handleBack}
-            />
+        {/* Mobile: Toggle between list and editor */}
+        <div className="md:hidden h-full flex flex-col">
+          {mobileView === 'editor' ? (
+            <div className="flex-1">
+              {selectedNote ? (
+                <NoteEditor
+                  key={editorKey}
+                  note={selectedNote}
+                  onUpdate={handleUpdateNote}
+                  onDelete={handleDeleteNote}
+                  onBack={handleBack}
+                />
+              ) : (
+                <EmptyState />
+              )}
+            </div>
           ) : (
-            <EmptyState />
+            <div className="flex-1">
+              <NoteList
+                notes={notes}
+                selectedNoteId={selectedNoteId}
+                onSelectNote={handleSelectNote}
+                onNewNote={handleNewNote}
+              />
+            </div>
           )}
         </div>
       </div>

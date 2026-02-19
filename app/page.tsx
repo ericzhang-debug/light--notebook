@@ -55,52 +55,13 @@ export default function Home() {
           <SignedIn>
             <Link
               href="/dashboard"
-              className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-semibold hover:from-green-600 hover:to-emerald-700 transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+              className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-semibold hover:from-green-600 hover:to-emerald-700 transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5 justify-center"
             >
               <Zap className="w-5 h-5" />
               进入备忘录
             </Link>
           </SignedIn>
-
-          {/* Features */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16">
-            <div className="p-6 rounded-2xl bg-[var(--macos-sidebar-bg)] border border-[var(--macos-border)] hover:shadow-md transition-shadow">
-              <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-4">
-                <Zap className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-              </div>
-              <h3 className="text-lg font-semibold text-[var(--macos-text-primary)] mb-2">
-                实时保存
-              </h3>
-              <p className="text-[var(--macos-text-secondary)] text-sm">
-                输入自动保存，无需担心内容丢失
-              </p>
-            </div>
-
-            <div className="p-6 rounded-2xl bg-[var(--macos-sidebar-bg)] border border-[var(--macos-border)] hover:shadow-md transition-shadow">
-              <div className="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center mb-4">
-                <Sparkles className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-              </div>
-              <h3 className="text-lg font-semibold text-[var(--macos-text-primary)] mb-2">
-                优雅设计
-              </h3>
-              <p className="text-[var(--macos-text-secondary)] text-sm">
-                MacOS 风格界面，简洁美观
-              </p>
-            </div>
-
-            <div className="p-6 rounded-2xl bg-[var(--macos-sidebar-bg)] border border-[var(--macos-border)] hover:shadow-md transition-shadow">
-              <div className="w-12 h-12 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center mb-4">
-                <Shield className="w-6 h-6 text-green-600 dark:text-green-400" />
-              </div>
-              <h3 className="text-lg font-semibold text-[var(--macos-text-primary)] mb-2">
-                安全可靠
-              </h3>
-              <p className="text-[var(--macos-text-secondary)] text-sm">
-                数据加密存储，隐私有保障
-              </p>
-            </div>
           </div>
-        </div>
       </main>
     </div>
   );
