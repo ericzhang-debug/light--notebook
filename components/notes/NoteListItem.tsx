@@ -14,8 +14,13 @@ export function NoteListItem({ note, isActive, onClick }: NoteListItemProps) {
     ? note.content.slice(0, 100).replace(/\n/g, ' ')
     : '无内容';
 
+  // Fix for incorrect timestamp from database
+  const noteDate = new Date(note.updatedAt);
+  const now = new Date();
+  const displayDate = noteDate.getFullYear() > 3000 ? now : noteDate;
+
   // Format date
-  const timeAgo = formatDistanceToNow(new Date(note.updatedAt), {
+  const timeAgo = formatDistanceToNow(displayDate, {
     addSuffix: true,
     locale: zhCN
   });

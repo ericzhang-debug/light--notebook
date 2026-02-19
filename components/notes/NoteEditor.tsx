@@ -45,11 +45,11 @@ export function NoteEditor({ note, onUpdate, onDelete, onBack }: NoteEditorProps
     };
   }, []);
 
-  // Save function with status feedback
-  const performSave = useCallback(async (titleToSave: string, contentToSave: string, isManual: boolean) => {
+  // Save function with status feedback, returns true if save was performed
+  const performSave = useCallback(async (titleToSave: string, contentToSave: string, isManual: boolean): Promise<boolean> => {
     // Check if anything changed
     if (titleToSave === note.title && contentToSave === note.content) {
-      return;
+      return false;
     }
 
     setSaveStatus('saving');
@@ -64,9 +64,11 @@ export function NoteEditor({ note, onUpdate, onDelete, onBack }: NoteEditorProps
       setTimeout(() => {
         setSaveStatus('idle');
       }, 2000);
+      return true;
     } catch (error) {
       console.error('Save failed:', error);
       setSaveStatus('idle');
+      return false;
     }
   }, [note.id, note.title, note.content, onUpdate]);
 
@@ -128,6 +130,31 @@ export function NoteEditor({ note, onUpdate, onDelete, onBack }: NoteEditorProps
     }
   };
 
+  // Back handler - saves first, then navigates back
+  const handleBackWithSave = async () => {
+    // Clear any pending auto-save
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+
+    // Perform save and wait for it to complete
+    const saved = await performSave(title, content, true);
+
+    // Navigate back after save completes (or immediately if no changes)
+    if (onBack) {
+      if (saved) {
+        // Wait a moment to show the save status
+        setTimeout(() => {
+          onBack();
+        }, 500);
+      } else {
+        // No changes, go back immediately
+        onBack();
+      }
+    }
+  };
+
   return (
     <div className="flex-1 flex flex-col h-full bg-[var(--macos-bg)] overflow-hidden">
       {/* Save Status Banner */}
@@ -141,7 +168,7 @@ export function NoteEditor({ note, onUpdate, onDelete, onBack }: NoteEditorProps
         </div>
       )}
 
-      <NoteHeader note={note} onDelete={handleDelete} onBack={onBack} />
+      <NoteHeader note={note} onDelete={handleDelete} onBack={handleBackWithSave} />
 
       {/* Title Input */}
       <input

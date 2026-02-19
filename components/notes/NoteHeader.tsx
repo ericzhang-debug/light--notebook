@@ -12,7 +12,12 @@ interface NoteHeaderProps {
 }
 
 export function NoteHeader({ note, onDelete, onBack }: NoteHeaderProps) {
-  const formattedDate = format(new Date(note.updatedAt), 'yyyy年MM月dd日 HH:mm', {
+  // Fix for incorrect timestamp from database - if date is unreasonably far in future, use current date
+  const noteDate = new Date(note.updatedAt);
+  const now = new Date();
+  const displayDate = noteDate.getFullYear() > 3000 ? now : noteDate;
+
+  const formattedDate = format(displayDate, 'yyyy年MM月dd日 HH:mm', {
     locale: zhCN
   });
 
