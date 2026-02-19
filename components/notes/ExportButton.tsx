@@ -3,13 +3,29 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { Download, ChevronDown } from 'lucide-react';
 import { Note } from '@/lib/db/schema';
-import html2pdf from 'html2pdf.js';
+import { Document, Page, Text, View } from '@react-pdf/renderer';
 
 interface ExportButtonProps {
   note: Note | null;
 }
 
 type ExportFormat = 'pdf' | 'txt' | 'doc';
+
+// PDF Document Component
+function PdfDocument({ note }: { note: Note }) {
+  return (
+    <Document>
+      <Page size="A4" style={{ padding: 40 }}>
+        <Text style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 20, color: '#333' }}>
+          {note.title || '无标题'}
+        </Text>
+        <Text style={{ fontSize: 14, lineHeight: 1.8, color: '#666' }}>
+          {note.content}
+        </Text>
+      </Page>
+    </Document>
+  );
+}
 
 export function ExportButton({ note }: ExportButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -33,8 +49,7 @@ export function ExportButton({ note }: ExportButtonProps) {
   const exportAsTxt = useCallback(() => {
     if (!note) return;
 
-    // Add BOM for proper UTF-8 encoding
-    const content = '\uFEFF' + `${note.title}\n\n${note.content}`;
+    const content = `${note.title}\n\n${note.content}`;
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -50,8 +65,7 @@ export function ExportButton({ note }: ExportButtonProps) {
   const exportAsDoc = useCallback(() => {
     if (!note) return;
 
-    // Add BOM for proper UTF-8 encoding in Word
-    const content = '\uFEFF' + `<html><meta charset="utf-8"><body>${note.title}<br/><br/>${note.content.replace(/\n/g, '<br/>')}</body></html>`;
+    const content = `<html><meta charset="utf-8"><body>${note.title}<br/><br/>${note.content.replace(/\n/g, '<br/>')}</body></html>`;
     const blob = new Blob([content], { type: 'application/msword' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -69,31 +83,18 @@ export function ExportButton({ note }: ExportButtonProps) {
 
     setIsExporting(true);
     try {
-      // Create HTML content for PDF
-      const element = document.createElement('div');
-      element.style.padding = '40px';
-      element.style.fontFamily = 'Arial, sans-serif';
-      element.innerHTML = `
-        <h1 style="font-size: 24px; font-weight: bold; margin-bottom: 20px; color: #333;">
-          ${note.title || '无标题'}
-        </h1>
-        <div style="font-size: 14px; line-height: 1.8; color: #666; white-space: pre-wrap;">${note.content}</div>
-      `;
+      // Dynamic import to avoid SSR issues
+      const { pdf } = await import('@react-pdf/renderer');
+      const blob = await pdf(<PdfDocument note={note} />).toBlob();
 
-      document.body.appendChild(element);
-
-      // Generate PDF
-      const opt = {
-        margin: 10,
-        filename: `${note.title || 'note'}.pdf`,
-        image: { type: 'jpeg' as const, quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const },
-      };
-
-      await html2pdf().set(opt).from(element).save();
-
-      document.body.removeChild(element);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${note.title || 'note'}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
     } catch (error) {
       console.error('PDF export failed:', error);
     } finally {
