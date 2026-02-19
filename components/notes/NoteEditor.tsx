@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Note } from '@/lib/db/schema';
 import { NoteHeader } from './NoteHeader';
+import { Save } from 'lucide-react';
 
 interface NoteEditorProps {
   note: Note;
@@ -162,6 +163,19 @@ export function NoteEditor({ note, onUpdate, onDelete, onBack }: NoteEditorProps
           text-[var(--macos-text-primary)] placeholder:text-[var(--macos-text-secondary)]
           leading-relaxed min-h-[300px]"
       />
+
+      {/* Mobile Save Button */}
+      <button
+        onClick={handleManualSave}
+        disabled={saveStatus === 'saving'}
+        className="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-blue-500 to-blue-600
+          text-white rounded-full shadow-lg hover:shadow-xl hover:from-blue-600 hover:to-blue-700
+          transition-all duration-200 flex items-center justify-center
+          disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
+        aria-label="保存"
+      >
+        <Save size={24} />
+      </button>
     </div>
   );
 }
