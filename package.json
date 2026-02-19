@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
     "db:init": "tsx lib/db/init.ts",
     "db:generate": "drizzle-kit generate",
