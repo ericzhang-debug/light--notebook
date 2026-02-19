@@ -6,7 +6,7 @@ import { NoteHeader } from './NoteHeader';
 
 interface NoteEditorProps {
   note: Note;
-  onUpdate: (id: number, data: { title?: string; content?: string }) => void;
+  onUpdate: (id: number, data: { title?: string; content?: string }) => Promise<void>;
   onDelete: (id: number) => void;
   onBack?: () => void;
 }
@@ -14,11 +14,10 @@ interface NoteEditorProps {
 export function NoteEditor({ note, onUpdate, onDelete, onBack }: NoteEditorProps) {
   const [title, setTitle] = useState(note.title);
   const [content, setContent] = useState(note.content);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const contentRef = useRef<HTMLTextAreaElement>(null);
-  const currentNoteIdRef = useRef<number>(note.id);
-  const lastSavedTitleRef = useRef<string>(note.title);
-  const lastSavedContentRef = useRef<string>(note.content);
+  const isNoteSwitchedRef = useRef(false);
 
   // Auto-resize textarea
   useEffect(() => {
@@ -28,34 +27,47 @@ export function NoteEditor({ note, onUpdate, onDelete, onBack }: NoteEditorProps
     }
   }, [content]);
 
-  // Only update local state when switching to a different note
+  // Reset state when switching to different note
   useEffect(() => {
-    if (note.id !== currentNoteIdRef.current) {
-      // Different note, update local state
+    if (isNoteSwitchedRef.current) {
       setTitle(note.title);
       setContent(note.content);
-      currentNoteIdRef.current = note.id;
-      lastSavedTitleRef.current = note.title;
-      lastSavedContentRef.current = note.content;
+      setSaveStatus('idle');
+      isNoteSwitchedRef.current = false;
     }
-  }, [note.id]);
+  }, [note.id, note.title, note.content]);
 
-  // Silent save function - doesn't update UI
-  const silentSave = useCallback((field: 'title' | 'content', value: string) => {
-    // Only save if value changed from last saved
-    const lastSaved = field === 'title' ? lastSavedTitleRef.current : lastSavedContentRef.current;
-    if (value === lastSaved) return;
+  // Mark that note will be switched
+  useEffect(() => {
+    return () => {
+      isNoteSwitchedRef.current = true;
+    };
+  }, []);
 
-    // Update last saved ref
-    if (field === 'title') {
-      lastSavedTitleRef.current = value;
-    } else {
-      lastSavedContentRef.current = value;
+  // Save function with status feedback
+  const performSave = useCallback(async (titleToSave: string, contentToSave: string, isManual: boolean) => {
+    // Check if anything changed
+    if (titleToSave === note.title && contentToSave === note.content) {
+      return;
     }
 
-    // Silent save in background - don't update parent state
-    onUpdate(note.id, { [field]: value });
-  }, [note.id, onUpdate]);
+    setSaveStatus('saving');
+    try {
+      await onUpdate(note.id, {
+        title: titleToSave,
+        content: contentToSave,
+      });
+      setSaveStatus('saved');
+
+      // Clear saved status after 2 seconds
+      setTimeout(() => {
+        setSaveStatus('idle');
+      }, 2000);
+    } catch (error) {
+      console.error('Save failed:', error);
+      setSaveStatus('idle');
+    }
+  }, [note.id, note.title, note.content, onUpdate]);
 
   // Debounced auto-save (10 seconds)
   const handleChange = (field: 'title' | 'content', value: string) => {
@@ -72,7 +84,7 @@ export function NoteEditor({ note, onUpdate, onDelete, onBack }: NoteEditorProps
 
     // Set new timeout for auto-save (10 seconds)
     timeoutRef.current = setTimeout(() => {
-      silentSave(field, value);
+      performSave(title, content, false);
     }, 10000);
   };
 
@@ -82,14 +94,12 @@ export function NoteEditor({ note, onUpdate, onDelete, onBack }: NoteEditorProps
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
-    silentSave('title', title);
-    silentSave('content', content);
-  }, [title, content, silentSave]);
+    performSave(title, content, true);
+  }, [title, content, performSave]);
 
   // Keyboard shortcut handler
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ctrl+S or Cmd+S
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault();
         handleManualSave();
@@ -102,23 +112,14 @@ export function NoteEditor({ note, onUpdate, onDelete, onBack }: NoteEditorProps
     };
   }, [handleManualSave]);
 
-  // Cleanup on unmount - save pending changes
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
-      // Save any pending changes on unmount
-      if (title !== lastSavedTitleRef.current || content !== lastSavedContentRef.current) {
-        if (title !== lastSavedTitleRef.current) {
-          onUpdate(note.id, { title });
-        }
-        if (content !== lastSavedContentRef.current) {
-          onUpdate(note.id, { content });
-        }
-      }
     };
-  }, [note.id, title, content, onUpdate]);
+  }, []);
 
   const handleDelete = () => {
     if (confirm('确定要删除这个备忘录吗？')) {
@@ -128,6 +129,17 @@ export function NoteEditor({ note, onUpdate, onDelete, onBack }: NoteEditorProps
 
   return (
     <div className="flex-1 flex flex-col h-full bg-[var(--macos-bg)] overflow-hidden">
+      {/* Save Status Banner */}
+      {saveStatus !== 'idle' && (
+        <div className={`px-4 py-2 text-center text-sm font-medium transition-all ${
+          saveStatus === 'saving'
+            ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400'
+            : 'bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400'
+        }`}>
+          {saveStatus === 'saving' ? '自动保存中...' : saveStatus === 'saved' ? '✓ 已保存' : ''}
+        </div>
+      )}
+
       <NoteHeader note={note} onDelete={handleDelete} onBack={onBack} />
 
       {/* Title Input */}

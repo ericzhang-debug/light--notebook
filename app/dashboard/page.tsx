@@ -16,6 +16,7 @@ export default function DashboardPage() {
   const [selectedNoteId, setSelectedNoteId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [mobileView, setMobileView] = useState<'list' | 'editor'>('list');
+  const [editorKey, setEditorKey] = useState(0); // Force remount on note switch
 
   // Redirect to sign-in if not authenticated
   useEffect(() => {
@@ -57,13 +58,14 @@ export default function DashboardPage() {
         setNotes((prev) => [newNote, ...prev]);
         setSelectedNoteId(newNote.id);
         setMobileView('editor');
+        setEditorKey(prev => prev + 1); // Force remount
       }
     } catch (error) {
       console.error('Failed to create note:', error);
     }
   };
 
-  // Update note - silent save, doesn't update UI state
+  // Update note - silent save
   const handleUpdateNote = async (id: number, data: { title?: string; content?: string }) => {
     try {
       await fetch(`/api/notes/${id}`, {
@@ -71,8 +73,15 @@ export default function DashboardPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
-      // Silent save - don't update notes state to avoid re-render issues
-      // Only update when switching notes or creating new notes
+      // Silent save - don't update notes state
+      // Only update the specific note in list for display purposes
+      setNotes((prev) =>
+        prev.map((note) =>
+          note.id === id
+            ? { ...note, ...data, updatedAt: new Date() }
+            : note
+        )
+      );
     } catch (error) {
       console.error('Failed to update note:', error);
     }
@@ -96,21 +105,11 @@ export default function DashboardPage() {
     }
   };
 
-  // Select note - refresh notes list when switching to get latest data
-  const handleSelectNote = useCallback(async (id: number) => {
+  // Select note
+  const handleSelectNote = useCallback((id: number) => {
     setSelectedNoteId(id);
     setMobileView('editor');
-
-    // Refresh notes list to get latest data when switching
-    try {
-      const response = await fetch('/api/notes');
-      if (response.ok) {
-        const data = await response.json();
-        setNotes(data);
-      }
-    } catch (error) {
-      console.error('Failed to refresh notes:', error);
-    }
+    setEditorKey(prev => prev + 1); // Force remount editor when switching
   }, []);
 
   // Back to list (mobile)
@@ -161,7 +160,9 @@ export default function DashboardPage() {
         {/* Editor - always visible on desktop, conditionally on mobile */}
         <div className={`${mobileView === 'list' ? 'hidden md:flex' : 'flex'} flex-1`}>
           {selectedNote ? (
+            // Use key to force remount when switching notes
             <NoteEditor
+              key={editorKey}
               note={selectedNote}
               onUpdate={handleUpdateNote}
               onDelete={handleDeleteNote}
